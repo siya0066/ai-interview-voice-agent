@@ -14,6 +14,7 @@ from groq.types.chat import (
     ChatCompletion,
     ChatCompletionUserMessageParam,
 )
+
 load_dotenv()
 
 client = Groq(

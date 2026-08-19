@@ -2,6 +2,7 @@
 
 from backend.schemas.interview_schema import InterviewReportSchema
 
+
 class Interview:
 
     def __init__(

@@ -7,6 +7,8 @@
 ##Handling retries
 
 import re
+
+
 class InterviewManager:
     def __init__(self):
 
@@ -103,9 +105,7 @@ class InterviewManager:
             else:
                 experience = "SENIOR"
         else:
-            if "fresher" in text:
-                experience = "BEGINNER"
-            elif "beginner" in text:
+            if "fresher" in text or "beginner" in text:
                 experience = "BEGINNER"
             elif "junior" in text:
                 experience = "JUNIOR"

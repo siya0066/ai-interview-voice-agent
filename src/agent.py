@@ -1,7 +1,4 @@
 from dotenv import load_dotenv
-
-load_dotenv()
-
 from livekit.agents import (
     Agent,
     AgentServer,
@@ -9,9 +6,9 @@ from livekit.agents import (
     JobContext,
     cli,
 )
-
 from livekit.plugins.deepgram import STT, TTS
 
+load_dotenv()
 
 server = AgentServer()
 

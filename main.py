@@ -1,5 +1,7 @@
 from fastapi import FastAPI
+
 from backend.api.interview_routes import router
+
 app = FastAPI(
     title="AI Interview Voice Agent",
     version="1.0.0"
