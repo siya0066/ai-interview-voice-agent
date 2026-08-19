@@ -1,159 +1,784 @@
-<a href="https://livekit.io/">
-  <img src="./.github/assets/livekit-mark.png" alt="LiveKit logo" width="100" height="100">
-</a>
+# AI Interview Voice Agent
 
-# LiveKit Agents Starter - Python
+An AI-powered voice interview system built with **LiveKit Agents**, **Deepgram**, **Groq**, **MongoDB**, and **FastAPI**.
 
-A complete starter project for building voice AI apps with [LiveKit Agents for Python](https://github.com/livekit/agents) and [LiveKit Cloud](https://cloud.livekit.io/).
+The system conducts technical interviews through real-time voice interaction. It collects candidate information, generates questions based on the candidate's role and experience, evaluates answers, asks follow-up questions when necessary, generates a final interview report, and stores the results in MongoDB.
 
-The starter project includes:
+---
 
-- A simple voice AI assistant, ready for extension and customization
-- A voice AI pipeline built on [LiveKit Inference](https://docs.livekit.io/agents/models/inference), providing zero-configuration access to [models](https://docs.livekit.io/agents/models) from top labs
-  - Uses the fast, open-weight Gemma 4 31B model, [hosted by LiveKit](https://docs.livekit.io/agents/models/llm/livekit/) and tuned for optimal performance in voice AI, as the default LLM
-  - Supports more than 50 models from OpenAI, Cartesia, Deepgram, and other providers
-  - Access to a wide range of other models, including [Realtime models](https://docs.livekit.io/agents/models/realtime), through extensive plugin ecosystem
-- Eval suite based on the LiveKit Agents [testing & evaluation framework](https://docs.livekit.io/agents/start/testing/)
-- [LiveKit Turn Detector](https://docs.livekit.io/agents/logic/turns/turn-detector/), an end-of-turn model that listens to the user's audio directly, combining semantic understanding with acoustic cues for state-of-the-art accuracy across 14 languages
-- [Background voice cancellation](https://docs.livekit.io/transport/media/noise-cancellation/)
-- Deep session insights from LiveKit [Agent Observability](https://docs.livekit.io/deploy/observability/)
-- A Dockerfile ready for [production deployment to LiveKit Cloud](https://docs.livekit.io/deploy/agents/)
+## Features
 
-This starter app is compatible with any [custom web/mobile frontend](https://docs.livekit.io/frontends/) or [telephony](https://docs.livekit.io/telephony/).
+- Real-time voice-based interviews
+- Candidate name, role, and experience collection
+- Experience-based interview difficulty
+- AI-generated technical interview questions
+- Prevention of repeated questions
+- Candidate answer evaluation
+- 1–10 answer scoring
+- Follow-up questions for incomplete answers
+- Question retry handling
+- Interview progress tracking
+- Final interview report generation
+- MongoDB persistence
+- FastAPI backend
+- LiveKit Cloud deployment
+- Docker-based production deployment
+- Automatic interview session termination
 
-## Using coding agents
+---
 
-This project is designed to work with coding agents like [Claude Code](https://claude.com/product/claude-code), [Cursor](https://www.cursor.com/), and [Codex](https://openai.com/codex/).
+## Tech Stack
 
-For your convenience, LiveKit offers both a CLI and an [MCP server](https://docs.livekit.io/reference/developer-tools/docs-mcp/) that can be used to browse and search its documentation. The [LiveKit CLI](https://docs.livekit.io/intro/basics/cli/) (`lk docs`) works with any coding agent that can run shell commands. Install it for your platform:
+| Technology | Purpose |
+|---|---|
+| Python | Core application |
+| LiveKit Agents | Real-time voice agent |
+| Deepgram | Speech-to-text and text-to-speech |
+| Groq | LLM inference |
+| Llama 3.3 70B | Question generation and answer evaluation |
+| MongoDB | Interview and report storage |
+| FastAPI | REST API backend |
+| Pydantic | Data validation |
+| Docker | Containerization |
+| LiveKit Cloud | Agent deployment |
+| uv | Python dependency management |
 
-**macOS:**
+---
 
-```console
-brew install livekit-cli
+# Architecture
+
+```text
+                         ┌─────────────────────┐
+                         │      Candidate      │
+                         │      Voice Input    │
+                         └──────────┬──────────┘
+                                    │
+                                    ▼
+                         ┌─────────────────────┐
+                         │    LiveKit Cloud    │
+                         │    Voice Session    │
+                         └──────────┬──────────┘
+                                    │
+                                    ▼
+                         ┌─────────────────────┐
+                         │    LiveKit Agent    │
+                         │  livekit_worker.py  │
+                         └──────────┬──────────┘
+                                    │
+                 ┌──────────────────┼──────────────────┐
+                 │                  │                  │
+                 ▼                  ▼                  ▼
+          ┌────────────┐     ┌────────────┐     ┌────────────┐
+          │  Deepgram  │     │    Groq    │     │  MongoDB   │
+          │ STT / TTS  │     │ Llama 3.3  │     │  Database  │
+          └────────────┘     └─────┬──────┘     └────────────┘
+                                   │
+                                   ▼
+                         ┌─────────────────────┐
+                         │  Interview Manager  │
+                         │                     │
+                         │  State Management   │
+                         │  Questions          │
+                         │  Answers            │
+                         │  Retries            │
+                         │  Scores             │
+                         └─────────────────────┘
+
+                         ┌─────────────────────┐
+                         │       FastAPI       │
+                         │    REST Backend     │
+                         └─────────────────────┘
+````
+
+---
+
+# Interview Flow
+
+```text
+Candidate joins
+       │
+       ▼
+Ask candidate name
+       │
+       ▼
+Ask target role
+       │
+       ▼
+Ask experience
+       │
+       ▼
+Determine experience level
+       │
+       ▼
+Generate interview question
+       │
+       ▼
+Candidate answers
+       │
+       ▼
+Evaluate answer
+       │
+       ├─────────────── Strong answer
+       │                       │
+       │                       ▼
+       │                 Next question
+       │
+       └─────────────── Incomplete / weak answer
+                               │
+                               ▼
+                       Follow-up question
+                               │
+                               ▼
+                       Evaluate response
+                               │
+                               ▼
+                         Next question
+                               │
+                               ▼
+                       Interview complete
+                               │
+                               ▼
+                     Generate final report
+                               │
+                               ▼
+                       Store in MongoDB
+                               │
+                               ▼
+                     End interview session
 ```
 
-**Linux:**
+---
 
-```console
-curl -sSL https://get.livekit.io/cli | bash
+# Experience Levels
+
+The interview difficulty is adjusted according to the candidate's experience.
+
+| Experience | Question Difficulty       |
+| ---------- | ------------------------- |
+| BEGINNER   | Very easy, basic concepts |
+| JUNIOR     | Easy to medium            |
+| MID        | Medium                    |
+| SENIOR     | Medium to advanced        |
+
+The interview focuses on conceptual questions.
+
+The question generator avoids:
+
+* Coding questions
+* Mathematical questions
+* System design questions
+* Algorithm implementation questions
+* Data structure implementation questions
+
+---
+
+# Answer Evaluation
+
+Candidate answers are evaluated using the LLM.
+
+The score is between **1 and 10**.
+
+```text
+1–3   Incorrect or irrelevant
+4–5   Partially correct
+6–7   Correct but basic
+8–10  Strong answer
 ```
 
-**Windows:**
+Each evaluation can contain:
 
-```console
-winget install LiveKit.LiveKitCLI
+* Score
+* Strengths
+* Weaknesses
+* Improvements
+
+Example:
+
+```json
+{
+  "score": 8,
+  "strengths": [
+    "Correctly explained the core concept"
+  ],
+  "weaknesses": [],
+  "improvements": [
+    "Could provide a practical example"
+  ]
+}
 ```
 
-The `lk docs` subcommand requires version 2.15.0 or higher. Check your version with `lk --version` and update if needed. Once installed, your coding agent can search and browse LiveKit documentation directly from the terminal:
+---
 
-```console
-lk docs search "voice agents"
-lk docs get-page /agents/start/voice-ai-quickstart
+# Follow-up Questions
+
+If the candidate gives an incomplete or weak answer, the agent can ask a follow-up question instead of immediately moving to the next question.
+
+Example:
+
+```text
+Agent:
+What is machine learning?
+
+Candidate:
+It is related to computers learning.
+
+Agent:
+Could you explain how computers learn from data?
 ```
 
-See the [Using coding agents](https://docs.livekit.io/intro/coding-agents/) guide for more details, including MCP server setup.
+The system can retry a question a limited number of times before moving forward.
 
-The project includes a complete [AGENTS.md](AGENTS.md) file for these assistants. You can modify this file to suit your needs. To learn more about this file, see [https://agents.md](https://agents.md).
+---
 
-## Dev Setup
+# Question Management
 
-Create a project from this template with the LiveKit CLI (recommended):
+The interview manager maintains a list of previously asked questions.
+
+This allows the question generator to avoid repeating questions during the same interview.
+
+The interview manager also tracks:
+
+* Current interview state
+* Candidate name
+* Candidate role
+* Candidate experience
+* Current question
+* Question count
+* Retry count
+* Current answer
+* Interview responses
+* Evaluation results
+
+---
+
+# Project Structure
+
+```text
+ai-interview-agent/
+│
+├── .env.example
+├── .gitignore
+├── Dockerfile
+├── livekit.toml
+├── pyproject.toml
+├── README.md
+├── uv.lock
+│
+├── src/
+│   │
+│   ├── agent/
+│   │   ├── __init__.py
+│   │   └── livekit_worker.py
+│   │
+│   └── backend/
+│       ├── __init__.py
+│       │
+│       ├── api/
+│       │   ├── __init__.py
+│       │   └── interview_routes.py
+│       │
+│       ├── models/
+│       │   ├── __init__.py
+│       │   └── interview.py
+│       │
+│       ├── schemas/
+│       │   ├── __init__.py
+│       │   └── interview_schema.py
+│       │
+│       ├── services/
+│       │   ├── __init__.py
+│       │   ├── interview_agent.py
+│       │   ├── interview_manager.py
+│       │   └── interviewer.py
+│       │
+│       └── db.py
+│
+└── tests/
+```
+
+---
+
+# Core Components
+
+## `livekit_worker.py`
+
+The main LiveKit worker.
+
+Responsible for:
+
+* Connecting to LiveKit
+* Starting the voice session
+* Receiving candidate speech
+* Sending audio responses
+* Managing the interview flow
+* Calling the interview services
+* Ending the interview session
+
+---
+
+## `interview_manager.py`
+
+Manages the interview state and candidate information.
+
+Responsible for:
+
+* Candidate name
+* Candidate role
+* Candidate experience
+* Current question
+* Question count
+* Retry count
+* Interview state
+* Current answer
+* Interview data
+
+---
+
+## `interviewer.py`
+
+Contains the LLM-powered interview functionality.
+
+Main functions include:
+
+```python
+generate_question()
+generate_followup_question()
+evaluate_answer()
+generate_final_report()
+```
+
+---
+
+## `db.py`
+
+Handles the MongoDB connection and collections.
+
+The application uses MongoDB to persist completed interview reports.
+
+---
+
+## `interview_routes.py`
+
+Contains FastAPI endpoints for interacting with the interview backend.
+
+---
+
+## `interview_schema.py`
+
+Contains Pydantic schemas used for validation and structured interview data.
+
+---
+
+# MongoDB
+
+The application stores completed interview reports in MongoDB.
+
+A report can contain:
+
+* Candidate name
+* Target role
+* Experience level
+* Interview questions
+* Candidate answers
+* Individual evaluations
+* Scores
+* Strengths
+* Weaknesses
+* Improvements
+* Final recommendation
+* Interview timestamp
+
+Example document:
+
+```json
+{
+  "candidate_name": "Candidate Name",
+  "role": "AI Engineer",
+  "experience": "JUNIOR",
+  "interview_data": [
+    {
+      "question": "What is machine learning?",
+      "answer": "Candidate response...",
+      "evaluation": {
+        "score": 8,
+        "strengths": [
+          "Correctly explained the basic concept"
+        ],
+        "weaknesses": [],
+        "improvements": [
+          "Could provide a practical example"
+        ]
+      }
+    }
+  ],
+  "final_report": {
+    "overall_score": 8,
+    "strengths": [],
+    "weaknesses": [],
+    "improvements": [],
+    "recommendation": "..."
+  }
+}
+```
+
+---
+
+# Environment Variables
+
+Create a `.env.local` file containing your credentials:
+
+```env
+LIVEKIT_URL=
+LIVEKIT_API_KEY=
+LIVEKIT_API_SECRET=
+
+DEEPGRAM_API_KEY=
+
+GROQ_API_KEY=
+
+MONGO_URI=
+```
+
+A `.env.example` file should be committed to the repository without real credentials.
+
+Example:
+
+```env
+LIVEKIT_URL=
+LIVEKIT_API_KEY=
+LIVEKIT_API_SECRET=
+
+DEEPGRAM_API_KEY=
+
+GROQ_API_KEY=
+
+MONGO_URI=
+```
+
+### Security
+
+Never commit:
+
+```text
+.env
+.env.local
+```
+
+or any file containing API keys, passwords, or database credentials.
+
+---
+
+# Local Development
+
+## 1. Clone the repository
 
 ```bash
-lk cloud auth
-lk agent init my-agent --template agent-starter-python
+git clone git@github.com:siya0066/ai-interview-voice-agent.git
 ```
 
-The CLI clones the template and configures your environment. Then follow the rest of this guide from [Run the agent](#run-the-agent).
+Enter the project:
 
-<details>
-<summary>Alternative: Manual setup without the CLI</summary>
+```bash
+cd ai-interview-voice-agent
+```
 
-Clone the repository and install dependencies to a virtual environment:
+---
 
-```console
-cd agent-starter-python
+## 2. Install dependencies
+
+This project uses `uv`.
+
+Install dependencies:
+
+```bash
 uv sync
 ```
 
-Sign up for [LiveKit Cloud](https://cloud.livekit.io/) then set up the environment by copying `.env.example` to `.env.local` and filling in the required keys:
+---
 
-- `LIVEKIT_URL`
-- `LIVEKIT_API_KEY`
-- `LIVEKIT_API_SECRET`
+## 3. Configure environment variables
 
-You can load the LiveKit environment automatically using the [LiveKit CLI](https://docs.livekit.io/intro/basics/cli/):
+Create `.env.local`:
+
+```bash
+cp .env.example .env.local
+```
+
+Then add your:
+
+* LiveKit credentials
+* Deepgram API key
+* Groq API key
+* MongoDB URI
+
+---
+
+# Running the Voice Agent
+
+For local development:
+
+```bash
+uv run python src/agent/livekit_worker.py dev
+```
+
+The worker will connect to LiveKit Cloud and wait for an interview session.
+
+---
+
+# Running the FastAPI Backend
+
+Start the FastAPI server:
+
+```bash
+uv run uvicorn main:app --reload
+```
+
+The API will be available at:
+
+```text
+http://127.0.0.1:8000
+```
+
+FastAPI Swagger documentation:
+
+```text
+http://127.0.0.1:8000/docs
+```
+
+---
+
+# LiveKit Cloud
+
+The voice agent is deployed using LiveKit Cloud.
+
+Authenticate the LiveKit CLI:
 
 ```bash
 lk cloud auth
-lk app env --write --destination .env.local
 ```
 
-</details>
+Check the configured project:
 
-## Run the agent
-
-Run this command to speak to your agent directly in your terminal:
-
-```console
-uv run python src/agent.py console
+```bash
+lk project list
 ```
 
-To run the agent for use with a frontend or telephony, use the `dev` command:
+Check the agent deployment:
 
-```console
-uv run python src/agent.py dev
+```bash
+lk agent status
 ```
 
-In production, use the `start` command:
+View deployment logs:
 
-```console
-uv run python src/agent.py start
+```bash
+lk agent logs
 ```
 
-## Frontend & Telephony
+Deploy updated code:
 
-Get started quickly with our pre-built frontend starter apps, or add telephony support:
+```bash
+lk agent deploy
+```
 
-| Platform | Link | Description |
-|----------|----------|-------------|
-| **Web** | [`livekit-examples/agent-starter-react`](https://github.com/livekit-examples/agent-starter-react) | Web voice AI assistant with React & Next.js |
-| **iOS/macOS** | [`livekit-examples/agent-starter-swift`](https://github.com/livekit-examples/agent-starter-swift) | Native iOS, macOS, and visionOS voice AI assistant |
-| **Flutter** | [`livekit-examples/agent-starter-flutter`](https://github.com/livekit-examples/agent-starter-flutter) | Cross-platform voice AI assistant app |
-| **React Native** | [`livekit-examples/voice-assistant-react-native`](https://github.com/livekit-examples/voice-assistant-react-native) | Native mobile app with React Native & Expo |
-| **Android** | [`livekit-examples/agent-starter-android`](https://github.com/livekit-examples/agent-starter-android) | Native Android app with Kotlin & Jetpack Compose |
-| **Web Embed** | [`livekit-examples/agent-starter-embed`](https://github.com/livekit-examples/agent-starter-embed) | Voice AI widget for any website |
-| **Telephony** | [Documentation](https://docs.livekit.io/telephony/) | Add inbound or outbound calling to your agent |
+The production deployment uses the project's:
 
-For advanced customization, see the [complete frontend guide](https://docs.livekit.io/frontends/).
+```text
+Dockerfile
+livekit.toml
+```
 
-## Tests and evals
+---
 
-This project includes a complete suite of evals, based on the LiveKit Agents [testing & evaluation framework](https://docs.livekit.io/agents/start/testing/). To run them, use `pytest`.
+# Docker
 
-```console
+The project includes a Dockerfile for production deployment.
+
+Build the Docker image:
+
+```bash
+docker build -t ai-interview-agent .
+```
+
+Run the container:
+
+```bash
+docker run ai-interview-agent
+```
+
+For production deployment, configure the required environment variables through the deployment platform rather than committing secrets to the repository.
+
+---
+
+# Testing
+
+The project contains a test suite under:
+
+```text
+tests/
+```
+
+Run the tests using:
+
+```bash
 uv run pytest
 ```
 
-## Using this template repo for your own project
+---
 
-Once you've started your own project based on this repo, you should:
+# API
 
-1. **Check in your `uv.lock`**: This file is currently untracked for the template, but you should commit it to your repository for reproducible builds and proper configuration management. (The same applies to `livekit.toml`, if you run your agents in LiveKit Cloud)
+The FastAPI backend provides endpoints for managing interviews and reports.
 
-2. **Remove the git tracking test**: Delete the "Check files not tracked in git" step from `.github/workflows/tests.yml` since you'll now want this file to be tracked. These are just there for development purposes in the template repo itself.
+Current API structure:
 
-3. **Add your own repository secrets**: You must [add secrets](https://docs.github.com/en/actions/how-tos/writing-workflows/choosing-what-your-workflow-does/using-secrets-in-github-actions) for `LIVEKIT_URL`, `LIVEKIT_API_KEY`, and `LIVEKIT_API_SECRET` so that the tests can run in CI.
+```text
+GET     /
+GET     /health
 
-## Deploying to production
+POST    /interview/start
 
-This project is production-ready and includes a working `Dockerfile`. To deploy it to LiveKit Cloud or another environment, see the [deploying to production](https://docs.livekit.io/deploy/agents/) guide.
+GET     /reports
 
-## Self-hosted LiveKit
+GET     /reports/{candidate_name}
 
-You can also self-host LiveKit instead of using LiveKit Cloud. See the [self-hosting](https://docs.livekit.io/transport/self-hosting/local/) guide for more information. If you choose to self-host, you'll need to also use [model plugins](https://docs.livekit.io/agents/models/#plugins) instead of LiveKit Inference and will need to remove the [LiveKit Cloud noise cancellation](https://docs.livekit.io/transport/media/noise-cancellation/) plugin.
+DELETE  /reports/{candidate_name}
+```
 
-## License
+Interactive API documentation is available at:
 
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+```text
+http://127.0.0.1:8000/docs
+```
+
+---
+
+# Interview Data
+
+Each completed interview contains information about:
+
+```text
+Candidate
+    ├── Name
+    ├── Role
+    └── Experience
+
+Interview
+    ├── Questions
+    ├── Answers
+    ├── Scores
+    ├── Strengths
+    ├── Weaknesses
+    └── Improvements
+
+Final Report
+    ├── Overall Score
+    ├── Strengths
+    ├── Weaknesses
+    ├── Improvements
+    └── Recommendation
+```
+
+---
+
+# Future Improvements
+
+Potential future improvements include:
+
+* Candidate authentication
+* Recruiter authentication
+* Interview scheduling
+* Resume-based interviews
+* Resume parsing
+* Behavioral interviews
+* HR interviews
+* Role-specific evaluation criteria
+* Candidate dashboard
+* Recruiter dashboard
+* Interview analytics
+* Real-time transcription display
+* Interview history
+* Candidate comparison
+* Advanced scoring
+* Web frontend
+* Interview scheduling
+* Email notifications
+* Multi-tenant organizations
+* Role-based access control
+
+---
+
+# Development Roadmap
+
+```text
+[x] LiveKit voice agent setup
+[x] LiveKit Cloud deployment
+[x] Deepgram STT/TTS integration
+[x] Groq LLM integration
+[x] MongoDB integration
+[ ] Interview state management
+[ ] Dynamic question generation
+[ ] Follow-up question handling
+[ ] Answer evaluation
+[ ] Final report generation
+[ ] FastAPI interview APIs
+[ ] Automatic session termination
+[ ] Automated tests
+[ ] Frontend
+```
+
+---
+
+# Deployment
+
+The application is designed to run as a LiveKit Agent in LiveKit Cloud.
+
+The production deployment consists of:
+
+```text
+Git Repository
+      │
+      ▼
+Docker Build
+      │
+      ▼
+LiveKit Cloud
+      │
+      ▼
+AI Interview Agent
+      │
+      ├── Deepgram
+      ├── Groq
+      └── MongoDB
+```
+
+---
+
+# Security Considerations
+
+The application handles candidate interview data and API credentials.
+
+Important security practices include:
+
+* Never commit API keys
+* Never commit MongoDB credentials
+* Keep `.env` and `.env.local` out of Git
+* Validate API input with Pydantic
+* Validate candidate data before storing it
+* Restrict MongoDB network access
+* Use HTTPS/WSS in production
+* Implement authentication before exposing production APIs
+* Implement authorization for interview reports
+* Avoid exposing internal error details through APIs
+* Use environment variables or a secret manager for production credentials
+
+---
+
+# License
+
+This project is licensed under the MIT License.
+
+```
+
+**One correction before you commit this README:** your current repository is the LiveKit starter repository, and your actual files are currently under `src/`. The README above reflects that structure. If we later move `main.py` into `src/` or change the backend layout, we should update the tree and commands at that point rather than leaving the README lying about the architecture.
+```
