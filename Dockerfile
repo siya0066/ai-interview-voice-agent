@@ -84,7 +84,5 @@ WORKDIR /app
 # This improves security by not running as root
 USER appuser
 
-# Run the AgentServer using UV
-# UV will activate the virtual environment and run the agent.
-# The "start" command tells the AgentServer to connect to LiveKit and begin waiting for jobs.
-CMD ["uv", "run", "src/agent.py", "start"]
+# Run the AI Interview Agent
+CMD ["uv", "run", "python", "-m", "agent.livekit_worker", "start"]
