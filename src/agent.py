@@ -59,9 +59,7 @@ Keep your responses concise.
 
     print("SESSION STARTED")
 
-    await session.say(
-        "Welcome to the AI Interview. Please tell me your name."
-    )
+    await session.say("Welcome to the AI Interview. Please tell me your name.")
 
     print("WELCOME SENT")
 

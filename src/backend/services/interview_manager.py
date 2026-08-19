@@ -1,4 +1,4 @@
-#This file is responsible for:
+# This file is responsible for:
 ##Managing interview states
 ##Extracting candidate information
 ##Keeping interview progress
@@ -15,12 +15,12 @@ class InterviewManager:
         # Interview States
         self.state = "ASK_NAME"
 
-        #Candidate Details
+        # Candidate Details
         self.candidate_name = None
         self.candidate_role = None
         self.candidate_experience = None
 
-        #Question Management
+        # Question Management
         self.current_question = None
         self.question_count = 0
         self.max_questions = 5
@@ -28,23 +28,21 @@ class InterviewManager:
         self.max_retries = 2
         self.asked_questions = []
 
-        #Answer Buffer
+        # Answer Buffer
         self.current_answer = ""
         self.last_answer_time = 0
 
-        #Interview Report
+        # Interview Report
         self.interview_data = []
 
-    #NAME
+    # NAME
     def process_name(self, transcript: str):
         transcript = transcript.strip()
-        match = re.search(
-            r"(?:my name is)\s+([a-zA-Z]+)", transcript, re.IGNORECASE
-        )
+        match = re.search(r"(?:my name is)\s+([a-zA-Z]+)", transcript, re.IGNORECASE)
         if match:
             name = match.group(1).title()
         else:
-            words=transcript.split()
+            words = transcript.split()
             if len(words) == 1:
                 name = words[0].title()
             else:
@@ -52,15 +50,12 @@ class InterviewManager:
         self.candidate_name = name
         self.state = "ASK_ROLE"
 
-        return(
-            f"Nice to meet you {name}."
-            f"What role are you applying for?"
-        )
+        return f"Nice to meet you {name}.What role are you applying for?"
 
-    #ROLE
+    # ROLE
     def process_role(self, transcript: str):
         role = transcript.lower()
-        patterns=[
+        patterns = [
             r"i am interviewing for the role of",
             r"i'm interviewing for the role of",
             r"interviewing for the role of",
@@ -72,7 +67,7 @@ class InterviewManager:
             r"role for",
             r"role of a",
             r"for a",
-            r"for an"
+            r"for an",
         ]
         for pattern in patterns:
             role = re.sub(pattern, "", role)
@@ -83,13 +78,13 @@ class InterviewManager:
         self.candidate_role = role
         self.state = "ASK_EXPERIENCE"
 
-        return(
+        return (
             f"Great, you are interviewing for the role of"
             f"{role}."
             f"How much experience do you have?"
         )
 
-    #EXPERIENCE
+    # EXPERIENCE
     def process_experience(self, transcript: str):
         text = transcript.lower()
         years = re.findall(r"(\d+)", text)
@@ -117,9 +112,7 @@ class InterviewManager:
         self.candidate_experience = experience
         self.state = "WAITING_FOR_ANSWER"
 
-        return(
+        return (
             f"Perfect. I've identified your experience level"
             f"as {experience}. Let's begin the interview."
         )
-
-

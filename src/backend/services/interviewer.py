@@ -1,9 +1,9 @@
-#Your entire project will use just four functions:
+# Your entire project will use just four functions:
 ##generate_question(...)
 ##generate_followup_question(...)
 ##evaluate_answer(...)
 ##generate_final_report(...)
-#This keeps all LLM-related code in one place.
+# This keeps all LLM-related code in one place.
 
 import json
 import os
@@ -17,16 +17,11 @@ from groq.types.chat import (
 
 load_dotenv()
 
-client = Groq(
-    api_key=os.getenv("GROQ_API_KEY")
-)
+client = Groq(api_key=os.getenv("GROQ_API_KEY"))
 
-#Generate Interview Question
-def generate_question(
-        role: str,
-        experience: str,
-        previous_questions: list[str]
-):
+
+# Generate Interview Question
+def generate_question(role: str, experience: str, previous_questions: list[str]):
     prompt = f"""
 You are an experienced technical interviewer.
 
@@ -71,16 +66,11 @@ Rules:
 """
     try:
         messages: list[ChatCompletionUserMessageParam] = [
-            ChatCompletionUserMessageParam(
-                role="user",
-                content=prompt
-            )
+            ChatCompletionUserMessageParam(role="user", content=prompt)
         ]
 
         response: ChatCompletion = client.chat.completions.create(
-            model="llama-3.3-70b-versatile",
-            messages=messages,
-            temperature=0.7
+            model="llama-3.3-70b-versatile", messages=messages, temperature=0.7
         )
 
         content = response.choices[0].message.content
@@ -96,11 +86,9 @@ Rules:
         print("QUESTION ERROR:", e)
         return "Tell me about yourself."
 
-#Generate Follow-up Question
-def generate_followup_question(
-        original_question: str,
-        answer: str
-):
+
+# Generate Follow-up Question
+def generate_followup_question(original_question: str, answer: str):
     prompt = f"""
     You are an interviewer.
 
@@ -124,16 +112,11 @@ Rules:
 """
     try:
         messages: list[ChatCompletionUserMessageParam] = [
-            ChatCompletionUserMessageParam(
-                role="user",
-                content=prompt
-            )
+            ChatCompletionUserMessageParam(role="user", content=prompt)
         ]
 
         response: ChatCompletion = client.chat.completions.create(
-            model="llama-3.3-70b-versatile",
-            messages=messages,
-            temperature=0.5
+            model="llama-3.3-70b-versatile", messages=messages, temperature=0.5
         )
 
         content = response.choices[0].message.content
@@ -146,11 +129,9 @@ Rules:
         print("FOLLOWUP ERROR:", e)
         return original_question
 
-#Evaluate Candidate Answer
-def evaluate_answer(
-        question: str,
-        answer: str
-):
+
+# Evaluate Candidate Answer
+def evaluate_answer(question: str, answer: str):
     prompt = f"""
     You are a senior interviewer.
 
@@ -189,16 +170,11 @@ Format:
 """
     try:
         messages: list[ChatCompletionUserMessageParam] = [
-            ChatCompletionUserMessageParam(
-                role="user",
-                content=prompt
-            )
+            ChatCompletionUserMessageParam(role="user", content=prompt)
         ]
 
         response: ChatCompletion = client.chat.completions.create(
-            model="llama-3.3-70b-versatile",
-            messages=messages,
-            temperature=0.2
+            model="llama-3.3-70b-versatile", messages=messages, temperature=0.2
         )
 
         content = response.choices[0].message.content
@@ -206,26 +182,16 @@ Format:
         if content is None:
             raise ValueError("Groq returned an empty response.")
 
-        text = (
-            content.replace("```json", "")
-            .replace("```", "")
-            .strip()
-        )
+        text = content.replace("```json", "").replace("```", "").strip()
 
         return json.loads(text)
     except Exception as e:
         print("EVALUATION ERROR:", e)
-        return {
-            "score": 5,
-            "strengths": [],
-            "weaknesses": [],
-            "improvements": []
-        }
+        return {"score": 5, "strengths": [], "weaknesses": [], "improvements": []}
 
-#Final Interview Report
-def generate_final_report(
-        interview_data
-):
+
+# Final Interview Report
+def generate_final_report(interview_data):
     prompt = f"""
     You are a senior technical interviewer.
 
@@ -247,16 +213,11 @@ Format:
 """
     try:
         messages: list[ChatCompletionUserMessageParam] = [
-            ChatCompletionUserMessageParam(
-                role="user",
-                content=prompt
-            )
+            ChatCompletionUserMessageParam(role="user", content=prompt)
         ]
 
         response: ChatCompletion = client.chat.completions.create(
-            model="llama-3.3-70b-versatile",
-            messages=messages,
-            temperature=0.3
+            model="llama-3.3-70b-versatile", messages=messages, temperature=0.3
         )
 
         content = response.choices[0].message.content
@@ -264,11 +225,7 @@ Format:
         if content is None:
             raise ValueError("Groq returned an empty response.")
 
-        text = (
-            content.replace("```json", "")
-            .replace("```", "")
-            .strip()
-        )
+        text = content.replace("```json", "").replace("```", "").strip()
 
         return json.loads(text)
     except Exception as e:
@@ -278,7 +235,5 @@ Format:
             "strengths": [],
             "weaknesses": [],
             "improvements": [],
-            "recommendation":"Unable to generate report."
+            "recommendation": "Unable to generate report.",
         }
-
-
