@@ -15,6 +15,7 @@ client = MongoClient(MONGO_URI)
 db = client["ai_interview_db"]
 reports = db["reports"]
 
+
 def check_database_connection() -> bool:
     try:
         client.admin.command("ping")
