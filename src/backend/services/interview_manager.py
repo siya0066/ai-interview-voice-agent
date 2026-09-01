@@ -61,7 +61,7 @@ class InterviewManager:
         self.candidate_name = name
         self.state = "ASK_ROLE"
 
-        return f"Nice to meet you {name}.What role are you applying for?"
+        return f"Nice to meet you, {name}. What role are you applying for?"
 
     # ROLE
     def process_role(self, transcript: str) -> str | None:
@@ -99,8 +99,8 @@ class InterviewManager:
         self.state = "ASK_EXPERIENCE"
 
         return (
-            f"Great, you are interviewing for the role of"
-            f"{self.candidate_role}."
+            f"Great, you are interviewing for the role of "
+            f"{self.candidate_role}. "
             f"How much experience do you have?"
         )
 
@@ -137,7 +137,7 @@ class InterviewManager:
         self.state = "READY_FOR_QUESTION"
 
         return (
-            f"Perfect. I've identified your experience level"
+            f"Perfect. I've identified your experience level "
             f"as {experience}. Let's begin the interview."
         )
 

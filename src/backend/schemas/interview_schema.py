@@ -5,8 +5,9 @@ from pydantic import BaseModel, Field
 
 class ExperienceLevel(StrEnum):
     BEGINNER = "BEGINNER"
-    INTERMEDIATE = "INTERMEDIATE"
-    ADVANCED = "ADVANCED"
+    JUNIOR = "JUNIOR"
+    MID = "MID"
+    SENIOR = "SENIOR"
 
 
 class InterviewCreateSchema(BaseModel):

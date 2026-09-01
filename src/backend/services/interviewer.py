@@ -165,7 +165,7 @@ Format:
     "score": number,
     "strengths": [],
     "weaknesses": [],
-    "improvements": []
+    "feedback": "",
 }}
 """
     try:
@@ -187,7 +187,7 @@ Format:
         return json.loads(text)
     except Exception as e:
         print("EVALUATION ERROR:", e)
-        return {"score": 5, "strengths": [], "weaknesses": [], "improvements": []}
+        return {"score": 5, "strengths": [], "weaknesses": [], "feedback": ""}
 
 
 # Final Interview Report
